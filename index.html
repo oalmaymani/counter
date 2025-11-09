@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>عدّاد مرن</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1220; --card:#13182a; --accent:#6ae3ff; --accent2:#7c5cff; --text:#e9efff; --muted:#9fb3c8;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Cairo',system-ui;
+      background:radial-gradient(1200px 800px at 20% -10%, #1b213c, transparent), #0b0f1b;
+      color:var(--text);
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .card{
+      width:min(820px, 96vw);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(10px);
+      border-radius:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
+      padding:26px 26px 30px;
+    }
+    .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:15px}
+    h1{font-size:clamp(22px,4vw,28px); margin:0}
+    .badge{font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid rgba(106,227,255,.35); background:rgba(106,227,255,.12); color:var(--accent)}
+    .inputs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .field{
+      background:rgba(10,14,26,.4);
+      border:1px solid rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:4px 10px 10px;
+      min-width:110px;
+    }
+    .field label{font-size:12px; color:var(--muted)}
+    .field input{
+      width:100%;
+      background:transparent;
+      border:none;
+      outline:none;
+      color:var(--text);
+      font-size:18px;
+      font-weight:700;
+      text-align:center;
+    }
+    .presets{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .chip{
+      background:#1b2340;
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:999px;
+      padding:6px 16px;
+      font-size:14px;
+      cursor:pointer;
+      transition:.08s;
+    }
+    .chip:hover{background:#222b49}
+    .timer{display:grid; place-items:center; margin:16px 0 22px}
+    .ring{position:relative; width:min(360px, 70vw); aspect-ratio:1/1; display:grid; place-items:center}
+    .ring .track{position:absolute; inset:0; border-radius:50%; background:
+      radial-gradient(circle, #1a2140 62%, transparent 63%), conic-gradient(#223 0 100%);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+    .ring .progress{position:absolute; inset:0; border-radius:50%; background:
+      conic-gradient(var(--accent), var(--accent2) calc(var(--p,0)*1%), transparent 0);
+      -webkit-mask:radial-gradient(circle at 50% 50%, transparent 58%, black 59%);
+              mask:radial-gradient(circle at 50% 50%, transparent 58%, black 59%);
+      filter:drop-shadow(0 0 18px rgba(122,225,255,.3))}
+    .time{font-variant-numeric:tabular-nums; font-size:clamp(30px, 9vw, 58px); font-weight:700; letter-spacing:.5px}
+    .controls{display:flex; flex-wrap:wrap; gap:12px; justify-content:center}
+    button{
+      appearance:none;
+      border:none;
+      padding:14px 20px;
+      border-radius:14px;
+      font-weight:700;
+      font-size:16px;
+      color:#0a0e1a;
+      background:linear-gradient(135deg, var(--accent), var(--accent2));
+      cursor:pointer;
+      box-shadow:0 8px 20px rgba(102,179,255,.28);
+      transition:transform .06s ease;
+    }
+    button.secondary{background:#1b2340; color:var(--text); border:1px solid rgba(255,255,255,.08); box-shadow:none}
+    button:disabled{opacity:.45; cursor:not-allowed}
+    button:active{transform:translateY(1px)}
+    .meta{color:var(--muted); font-size:13px; text-align:center; margin-top:11px}
+    @media (max-width:480px){
+      .header{flex-direction:column; align-items:flex-start}
+      .inputs{flex-direction:column}
+      .presets{justify-content:flex-start}
+      .ring{width:78vw}
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="app">
+    <div class="header">
+      <h1>عدّاد زمني مرن</h1>
+      <span class="badge" id="status">جاهز</span>
+    </div>
+
+    <!-- إدخال المدة -->
+    <div class="inputs">
+      <div class="field">
+        <label>الساعات</label>
+        <input type="number" id="hours" min="0" value="8">
+      </div>
+      <div class="field">
+        <label>الدقائق</label>
+        <input type="number" id="minutes" min="0" max="59" value="0">
+      </div>
+      <div class="field">
+        <label>الثواني</label>
+        <input type="number" id="seconds" min="0" max="59" value="0">
+      </div>
+    </div>
+
+    <!-- أزرار سريعة -->
+    <div class="presets">
+      <span class="chip" data-minutes="60">1 ساعة</span>
+      <span class="chip" data-minutes="120">2 ساعة</span>
+      <span class="chip" data-minutes="240">4 ساعات</span>
+      <span class="chip" data-minutes="480">8 ساعات</span>
+      <span class="chip" id="use-last" style="display:none;">آخر مدة</span>
+      <span class="chip" id="toggle-mute">🔔 الصوت يعمل</span>
+    </div>
+
+    <div class="timer">
+      <div class="ring">
+        <div class="track"></div>
+        <div class="progress" id="progress"></div>
+        <div class="time" id="time">08:00:00</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="start">ابدأ</button>
+      <button class="secondary" id="pause" disabled>إيقاف مؤقت</button>
+      <button class="secondary" id="resume" disabled>استئناف</button>
+      <button class="secondary" id="reset" disabled>إعادة ضبط</button>
+    </div>
+    <p class="meta">تلميح: المسافة = إيقاف/استئناف • Enter = ابدأ • يحفظ آخر مدة تلقائيًا • الكتم يوقف الصوت فقط</p>
+  </div>
+
+  <script>
+    (() => {
+      let totalMs = 8 * 60 * 60 * 1000; // افتراضي 8 ساعات
+      let remaining = totalMs;
+      let startedAt = null;
+      let timerId = null;
+      let paused = true;
+      let muteBeep = false;
+
+      const elTime = document.getElementById('time');
+      const elProg = document.getElementById('progress');
+      const elStatus = document.getElementById('status');
+      const hIn = document.getElementById('hours');
+      const mIn = document.getElementById('minutes');
+      const sIn = document.getElementById('seconds');
+      const btnStart = document.getElementById('start');
+      const btnPause = document.getElementById('pause');
+      const btnResume = document.getElementById('resume');
+      const btnReset = document.getElementById('reset');
+      const btnLast = document.getElementById('use-last');
+      const btnMute = document.getElementById('toggle-mute');
+      const chips = document.querySelectorAll('.chip[data-minutes]');
+
+      // استرجاع آخر مدة
+      const savedDur = JSON.parse(localStorage.getItem('flexTimerDuration') || 'null');
+      if (savedDur && typeof savedDur.totalMs === 'number') {
+        btnLast.style.display = 'inline-block';
+      }
+
+      // استرجاع حالة الكتم
+      const savedMute = localStorage.getItem('flexTimerMute');
+      if (savedMute === '1') {
+        muteBeep = true;
+        updateMuteButton();
+      }
+
+      function msFromInputs(){
+        const h = parseInt(hIn.value || '0', 10);
+        const m = parseInt(mIn.value || '0', 10);
+        const s = parseInt(sIn.value || '0', 10);
+        return ((h*60*60) + (m*60) + s) * 1000;
+      }
+
+      function inputsFromMs(ms){
+        const totalSec = Math.floor(ms / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        hIn.value = h;
+        mIn.value = m;
+        sIn.value = s;
+      }
+
+      function format(ms){
+        const s = Math.ceil(ms/1000);
+        const hh = String(Math.floor(s/3600)).padStart(2,'0');
+        const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+        const ss = String(s%60).padStart(2,'0');
+        return `${hh}:${mm}:${ss}`;
+      }
+
+      function setBadge(text, danger=false){
+        elStatus.textContent = text;
+        elStatus.style.color = danger ? '#ffb3c1' : 'var(--accent)';
+        elStatus.style.background = danger ? 'rgba(255,119,141,.15)' : 'rgba(106,227,255,.12)';
+        elStatus.style.borderColor = danger ? 'rgba(255,119,141,.4)' : 'rgba(106,227,255,.35)';
+      }
+
+      function updateProgress(){
+        const p = (1 - (remaining / totalMs)) * 100;
+        elProg.style.setProperty('--p', p);
+      }
+
+      function render(){
+        elTime.textContent = format(remaining);
+        updateProgress();
+        btnPause.disabled = paused || remaining <= 0;
+        btnResume.disabled = !paused || remaining <= 0;
+        btnReset.disabled = remaining === totalMs;
+        btnStart.disabled = !paused && remaining > 0;
+        setBadge(remaining <= 0 ? 'انتهى' : (paused ? 'متوقف' : 'يعمل'), remaining <= 0);
+        document.title = (remaining<=0 ? '✓ ' : '') + elTime.textContent + ' — عدّاد';
+      }
+
+      function tick(){
+        const now = Date.now();
+        const elapsed = now - startedAt;
+        startedAt = now;
+        remaining -= elapsed;
+        if (remaining <= 0){
+          remaining = 0;
+          stopTick();
+          alertDone();
+        }
+        render();
+      }
+
+      function startTick(resume=false){
+        if (!resume){
+          // حدّد المدة من المدخلات
+          totalMs = msFromInputs();
+          if (totalMs <= 0){
+            alert('حدّد مدة صالحة أولًا.');
+            return;
+          }
+          remaining = totalMs;
+          saveDuration(totalMs);
+        }
+        startedAt = Date.now();
+        if (timerId) clearInterval(timerId);
+        timerId = setInterval(tick, 1000);
+        paused = false;
+        render();
+      }
+
+      function stopTick(){
+        if (timerId) clearInterval(timerId);
+        timerId = null;
+        paused = true;
+        render();
+      }
+
+      function reset(){
+        remaining = totalMs;
+        paused = true;
+        stopTick();
+        render();
+      }
+
+      function alertDone(){
+        setBadge('انتهى', true);
+        // صوت فقط لو غير مكتوم
+        if (!muteBeep) {
+          try { beep(); } catch {}
+        }
+        // الإشعار يبقى حتى لو الصوت مكتوم
+        notify('انتهى العدّاد', 'الوقت الذي حددته انتهى ✅');
+      }
+
+      function beep(){
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        let t = ctx.currentTime;
+        const pattern = [880, 660, 990, 660, 880];
+        pattern.forEach((f, i)=> { o.frequency.setValueAtTime(f, t + i*0.2); });
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.5, t+0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+1.1);
+        o.start(t); o.stop(t+1.2);
+      }
+
+      function notify(title, body){
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'granted') new Notification(title, { body });
+        else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(p => { if (p==='granted') new Notification(title, { body }); });
+        }
+      }
+
+      function saveDuration(ms){
+        localStorage.setItem('flexTimerDuration', JSON.stringify({ totalMs: ms, savedAt: Date.now() }));
+        btnLast.style.display = 'inline-block';
+      }
+
+      function updateMuteButton(){
+        btnMute.textContent = muteBeep ? '🔇 الصوت مكتوم' : '🔔 الصوت يعمل';
+      }
+
+      // events
+      btnStart.addEventListener('click', () => startTick(false));
+      btnPause.addEventListener('click', () => stopTick());
+      btnResume.addEventListener('click', () => {
+        if (remaining > 0) startTick(true);
+      });
+      btnReset.addEventListener('click', () => reset());
+
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          const mins = parseInt(chip.dataset.minutes, 10);
+          const ms = mins * 60 * 1000;
+          totalMs = ms;
+          remaining = ms;
+          inputsFromMs(ms);
+          render();
+        });
+      });
+
+      btnLast.addEventListener('click', () => {
+        const saved = JSON.parse(localStorage.getItem('flexTimerDuration') || 'null');
+        if (saved && saved.totalMs){
+          totalMs = saved.totalMs;
+          remaining = saved.totalMs;
+          inputsFromMs(saved.totalMs);
+          render();
+        }
+      });
+
+      btnMute.addEventListener('click', () => {
+        muteBeep = !muteBeep;
+        localStorage.setItem('flexTimerMute', muteBeep ? '1' : '0');
+        updateMuteButton();
+      });
+
+      // تحديث الوقت في الدائري أول مرة
+      render();
+
+      // اختصارات
+      addEventListener('keydown', (e) => {
+        if (e.target.closest('input,textarea,select,button')) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (remaining > 0) paused ? startTick(true) : stopTick();
+        } else if (e.code === 'Enter') {
+          e.preventDefault();
+          if (paused) startTick(false);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
