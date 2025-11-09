@@ -1,385 +1,484 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>عدّاد مرن</title>
+  <title>لوحة المؤقتات</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#0f1220; --card:#13182a; --accent:#6ae3ff; --accent2:#7c5cff; --text:#e9efff; --muted:#9fb3c8;
+      --border: rgba(255,255,255,.08);
+    }
+    [data-theme="light"]{
+      --bg:#f0f4ff; --card:#ffffff; --accent:#0076ff; --accent2:#5c19ff; --text:#0f1220; --muted:#5f6b75;
+      --border: rgba(10,14,26,.1);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:'Cairo',system-ui;
-      background:radial-gradient(1200px 800px at 20% -10%, #1b213c, transparent), #0b0f1b;
+      background:var(--bg);
       color:var(--text);
       min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:24px;
-    }
-    .card{
-      width:min(820px, 96vw);
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(10px);
-      border-radius:24px;
-      box-shadow:0 20px 60px rgba(0,0,0,.35);
-      padding:26px 26px 30px;
-    }
-    .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:15px}
-    h1{font-size:clamp(22px,4vw,28px); margin:0}
-    .badge{font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid rgba(106,227,255,.35); background:rgba(106,227,255,.12); color:var(--accent)}
-    .inputs{
       display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-bottom:14px;
+      flex-direction:column;
+      gap:16px;
+      padding:16px;
     }
-    .field{
-      background:rgba(10,14,26,.4);
-      border:1px solid rgba(255,255,255,.04);
-      border-radius:14px;
-      padding:4px 10px 10px;
-      min-width:110px;
-    }
-    .field label{font-size:12px; color:var(--muted)}
-    .field input{
-      width:100%;
-      background:transparent;
-      border:none;
-      outline:none;
-      color:var(--text);
-      font-size:18px;
-      font-weight:700;
-      text-align:center;
-    }
-    .presets{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
-    }
-    .chip{
-      background:#1b2340;
-      border:1px solid rgba(255,255,255,.05);
-      border-radius:999px;
-      padding:6px 16px;
-      font-size:14px;
-      cursor:pointer;
-      transition:.08s;
-    }
-    .chip:hover{background:#222b49}
-    .timer{display:grid; place-items:center; margin:16px 0 22px}
-    .ring{position:relative; width:min(360px, 70vw); aspect-ratio:1/1; display:grid; place-items:center}
-    .ring .track{position:absolute; inset:0; border-radius:50%; background:
-      radial-gradient(circle, #1a2140 62%, transparent 63%), conic-gradient(#223 0 100%);
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
-    .ring .progress{position:absolute; inset:0; border-radius:50%; background:
-      conic-gradient(var(--accent), var(--accent2) calc(var(--p,0)*1%), transparent 0);
-      -webkit-mask:radial-gradient(circle at 50% 50%, transparent 58%, black 59%);
-              mask:radial-gradient(circle at 50% 50%, transparent 58%, black 59%);
-      filter:drop-shadow(0 0 18px rgba(122,225,255,.3))}
-    .time{font-variant-numeric:tabular-nums; font-size:clamp(30px, 9vw, 58px); font-weight:700; letter-spacing:.5px}
-    .controls{display:flex; flex-wrap:wrap; gap:12px; justify-content:center}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+    .title{font-size:20px;font-weight:700}
     button{
-      appearance:none;
-      border:none;
-      padding:14px 20px;
-      border-radius:14px;
-      font-weight:700;
-      font-size:16px;
-      color:#0a0e1a;
-      background:linear-gradient(135deg, var(--accent), var(--accent2));
-      cursor:pointer;
-      box-shadow:0 8px 20px rgba(102,179,255,.28);
-      transition:transform .06s ease;
+      appearance:none;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;padding:9px 16px;border-radius:14px;font-weight:700;cursor:pointer;font-family:inherit;
     }
-    button.secondary{background:#1b2340; color:var(--text); border:1px solid rgba(255,255,255,.08); box-shadow:none}
-    button:disabled{opacity:.45; cursor:not-allowed}
-    button:active{transform:translateY(1px)}
-    .meta{color:var(--muted); font-size:13px; text-align:center; margin-top:11px}
-    @media (max-width:480px){
-      .header{flex-direction:column; align-items:flex-start}
-      .inputs{flex-direction:column}
-      .presets{justify-content:flex-start}
-      .ring{width:78vw}
+    button.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;}
+    .timers{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;}
+    .timers.single{justify-content:center;}
+    .timers.single .timer-card{width:min(560px,100%);}
+    .timers.single .ring{width:260px;}
+    .timer-card{
+      background:var(--card);border:1px solid var(--border);border-radius:22px;width:360px;
+      padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 12px 40px rgba(0,0,0,.1);
+      cursor:pointer;transition:.12s ease;
+    }
+    .timer-card.active{outline:3px solid var(--accent);box-shadow:0 0 16px rgba(106,227,255,.4);}
+    .timer-header{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    .badge{background:rgba(106,227,255,.12);border:1px solid rgba(106,227,255,.25);border-radius:999px;font-size:12px;padding:4px 10px;color:var(--accent);}
+    .inputs-row{display:flex;gap:8px;flex-wrap:wrap;}
+    .field{background:rgba(10,14,26,.12);border:1px solid rgba(255,255,255,.02);border-radius:14px;padding:4px 10px 8px;min-width:80px;flex:1;}
+    [data-theme="light"] .field{background:rgba(15,18,32,.03);border:1px solid rgba(0,0,0,.03)}
+    .field label{font-size:11px;color:var(--muted)}
+    .field input,.field select{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-size:16px;font-weight:700;}
+    .inline-small{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+    .inline-small .time-input{background:transparent;border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:3px 6px;color:inherit;}
+    .inline-small label{display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;}
+    .small-btn{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);padding:4px 10px;border-radius:999px;font-size:11px;cursor:pointer;white-space:nowrap;}
+    .ring-wrap{display:flex;justify-content:center}
+    .ring{position:relative;width:200px;aspect-ratio:1/1;display:grid;place-items:center;}
+    .ring .track{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(26,33,64,.1) 56%,transparent 57%),conic-gradient(#243 0 100%);z-index:1;}
+    .ring .progress{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent),var(--accent2) calc(var(--p,0)*1%),transparent 0);-webkit-mask:radial-gradient(circle at 50% 50%,transparent 60%,black 61%);mask:radial-gradient(circle at 50% 50%,transparent 60%,black 61%);filter:drop-shadow(0 0 14px rgba(122,225,255,.4));z-index:2;}
+    .time{position:relative;z-index:3;font-variant-numeric:tabular-nums;font-size:28px;font-weight:700;}
+    .timer-actions{display:flex;gap:6px;flex-wrap:wrap;}
+    .timer-actions button{flex:1;text-align:center;}
+    .sidebar{display:flex;flex-direction:column;gap:14px;}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;}
+    .panel h2{font-size:15px;margin:0 0 10px}
+    .profile-list,.history-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;}
+    .profile-item,.history-item{background:rgba(0,0,0,.05);border:1px solid rgba(255,255,255,.02);border-radius:14px;padding:6px 10px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;}
+    small{color:var(--muted)}
+    .linkish{color:var(--accent);font-size:12px;cursor:pointer}
+    @media (max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      .timers{justify-content:flex-start;}
+      .timers.single .timer-card{width:100%;}
     }
   </style>
 </head>
 <body>
-  <div class="card" id="app">
-    <div class="header">
-      <h1>عدّاد زمني مرن</h1>
-      <span class="badge" id="status">جاهز</span>
+  <div class="topbar">
+    <div class="title">لوحة المؤقتات</div>
+    <div style="display:flex;gap:8px;">
+      <button id="add-timer">+ مؤقت جديد</button>
+      <button class="secondary" id="toggle-theme">وضع فاتح/داكن</button>
     </div>
+  </div>
 
-    <!-- إدخال المدة -->
-    <div class="inputs">
-      <div class="field">
-        <label>الساعات</label>
-        <input type="number" id="hours" min="0" value="8">
+  <div class="layout">
+    <div class="timers" id="timers"></div>
+    <div class="sidebar">
+      <div class="panel">
+        <h2>البروفايلات</h2>
+        <div class="profile-list" id="profiles"></div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <input id="profile-name" placeholder="اسم المدة" style="flex:1;border:1px solid var(--border);background:transparent;border-radius:10px;padding:5px 8px;color:var(--text);">
+          <input id="profile-mins" type="number" min="1" placeholder="دقائق" style="width:90px;border:1px solid var(--border);background:transparent;border-radius:10px;padding:5px 8px;color:var(--text);">
+          <button id="save-profile">حفظ</button>
+        </div>
+        <small>اختر مؤقت ثم اضغط بروفايل</small>
       </div>
-      <div class="field">
-        <label>الدقائق</label>
-        <input type="number" id="minutes" min="0" max="59" value="0">
+      <div class="panel">
+        <h2>السجل</h2>
+        <div class="history-list" id="history"></div>
+        <div class="linkish" id="clear-history">مسح السجل</div>
       </div>
-      <div class="field">
-        <label>الثواني</label>
-        <input type="number" id="seconds" min="0" max="59" value="0">
-      </div>
-    </div>
-
-    <!-- أزرار سريعة -->
-    <div class="presets">
-      <span class="chip" data-minutes="60">1 ساعة</span>
-      <span class="chip" data-minutes="120">2 ساعة</span>
-      <span class="chip" data-minutes="240">4 ساعات</span>
-      <span class="chip" data-minutes="480">8 ساعات</span>
-      <span class="chip" id="use-last" style="display:none;">آخر مدة</span>
-      <span class="chip" id="toggle-mute">🔔 الصوت يعمل</span>
-    </div>
-
-    <div class="timer">
-      <div class="ring">
-        <div class="track"></div>
-        <div class="progress" id="progress"></div>
-        <div class="time" id="time">08:00:00</div>
+      <div class="panel">
+        <h2>Webhook (اختياري)</h2>
+        <input id="webhook-url" placeholder="https://example.com/hook" style="width:100%;border:1px solid var(--border);background:transparent;border-radius:10px;padding:5px 8px;color:var(--text);">
+        <small>يستدعى عند انتهاء مؤقت</small>
       </div>
     </div>
-
-    <div class="controls">
-      <button id="start">ابدأ</button>
-      <button class="secondary" id="pause" disabled>إيقاف مؤقت</button>
-      <button class="secondary" id="resume" disabled>استئناف</button>
-      <button class="secondary" id="reset" disabled>إعادة ضبط</button>
-    </div>
-    <p class="meta">تلميح: المسافة = إيقاف/استئناف • Enter = ابدأ • يحفظ آخر مدة تلقائيًا • الكتم يوقف الصوت فقط</p>
   </div>
 
   <script>
-    (() => {
-      let totalMs = 8 * 60 * 60 * 1000; // افتراضي 8 ساعات
-      let remaining = totalMs;
-      let startedAt = null;
-      let timerId = null;
-      let paused = true;
-      let muteBeep = false;
+    function normalizeDigits(str){if(typeof str!=='string')str=String(str??'');return str.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));}
+    function msToParts(ms){const s=Math.max(0,Math.floor(ms/1000));return{h:Math.floor(s/3600),m:Math.floor((s%3600)/60),s:s%60};}
+    function formatMs(ms){const p=msToParts(ms);return String(p.h).padStart(2,'0')+":"+String(p.m).padStart(2,'0')+":"+String(p.s).padStart(2,'0');}
+    function makeTodayTargetFromHHMM(hhmm){if(!hhmm)return null;const [h,m]=hhmm.split(':').map(x=>parseInt(x,10));if(Number.isNaN(h)||Number.isNaN(m))return null;const now=new Date();return new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);}
 
-      const elTime = document.getElementById('time');
-      const elProg = document.getElementById('progress');
-      const elStatus = document.getElementById('status');
-      const hIn = document.getElementById('hours');
-      const mIn = document.getElementById('minutes');
-      const sIn = document.getElementById('seconds');
-      const btnStart = document.getElementById('start');
-      const btnPause = document.getElementById('pause');
-      const btnResume = document.getElementById('resume');
-      const btnReset = document.getElementById('reset');
-      const btnLast = document.getElementById('use-last');
-      const btnMute = document.getElementById('toggle-mute');
-      const chips = document.querySelectorAll('.chip[data-minutes]');
+    const timersEl=document.getElementById('timers');
+    const profilesEl=document.getElementById('profiles');
+    const historyEl=document.getElementById('history');
+    const webhookInput=document.getElementById('webhook-url');
 
-      // استرجاع آخر مدة
-      const savedDur = JSON.parse(localStorage.getItem('flexTimerDuration') || 'null');
-      if (savedDur && typeof savedDur.totalMs === 'number') {
-        btnLast.style.display = 'inline-block';
-      }
+    let timers=[],profiles=[],history=[],activeTimerId=null;
 
-      // استرجاع حالة الكتم
-      const savedMute = localStorage.getItem('flexTimerMute');
-      if (savedMute === '1') {
-        muteBeep = true;
-        updateMuteButton();
-      }
-
-      function msFromInputs(){
-        const h = parseInt(hIn.value || '0', 10);
-        const m = parseInt(mIn.value || '0', 10);
-        const s = parseInt(sIn.value || '0', 10);
-        return ((h*60*60) + (m*60) + s) * 1000;
-      }
-
-      function inputsFromMs(ms){
-        const totalSec = Math.floor(ms / 1000);
-        const h = Math.floor(totalSec / 3600);
-        const m = Math.floor((totalSec % 3600) / 60);
-        const s = totalSec % 60;
-        hIn.value = h;
-        mIn.value = m;
-        sIn.value = s;
-      }
-
-      function format(ms){
-        const s = Math.ceil(ms/1000);
-        const hh = String(Math.floor(s/3600)).padStart(2,'0');
-        const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
-        const ss = String(s%60).padStart(2,'0');
-        return `${hh}:${mm}:${ss}`;
-      }
-
-      function setBadge(text, danger=false){
-        elStatus.textContent = text;
-        elStatus.style.color = danger ? '#ffb3c1' : 'var(--accent)';
-        elStatus.style.background = danger ? 'rgba(255,119,141,.15)' : 'rgba(106,227,255,.12)';
-        elStatus.style.borderColor = danger ? 'rgba(255,119,141,.4)' : 'rgba(106,227,255,.35)';
-      }
-
-      function updateProgress(){
-        const p = (1 - (remaining / totalMs)) * 100;
-        elProg.style.setProperty('--p', p);
-      }
-
-      function render(){
-        elTime.textContent = format(remaining);
-        updateProgress();
-        btnPause.disabled = paused || remaining <= 0;
-        btnResume.disabled = !paused || remaining <= 0;
-        btnReset.disabled = remaining === totalMs;
-        btnStart.disabled = !paused && remaining > 0;
-        setBadge(remaining <= 0 ? 'انتهى' : (paused ? 'متوقف' : 'يعمل'), remaining <= 0);
-        document.title = (remaining<=0 ? '✓ ' : '') + elTime.textContent + ' — عدّاد';
-      }
-
-      function tick(){
-        const now = Date.now();
-        const elapsed = now - startedAt;
-        startedAt = now;
-        remaining -= elapsed;
-        if (remaining <= 0){
-          remaining = 0;
-          stopTick();
-          alertDone();
-        }
-        render();
-      }
-
-      function startTick(resume=false){
-        if (!resume){
-          // حدّد المدة من المدخلات
-          totalMs = msFromInputs();
-          if (totalMs <= 0){
-            alert('حدّد مدة صالحة أولًا.');
-            return;
-          }
-          remaining = totalMs;
-          saveDuration(totalMs);
-        }
-        startedAt = Date.now();
-        if (timerId) clearInterval(timerId);
-        timerId = setInterval(tick, 1000);
-        paused = false;
-        render();
-      }
-
-      function stopTick(){
-        if (timerId) clearInterval(timerId);
-        timerId = null;
-        paused = true;
-        render();
-      }
-
-      function reset(){
-        remaining = totalMs;
-        paused = true;
-        stopTick();
-        render();
-      }
-
-      function alertDone(){
-        setBadge('انتهى', true);
-        // صوت فقط لو غير مكتوم
-        if (!muteBeep) {
-          try { beep(); } catch {}
-        }
-        // الإشعار يبقى حتى لو الصوت مكتوم
-        notify('انتهى العدّاد', 'الوقت الذي حددته انتهى ✅');
-      }
-
-      function beep(){
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.type = 'sine';
-        let t = ctx.currentTime;
-        const pattern = [880, 660, 990, 660, 880];
-        pattern.forEach((f, i)=> { o.frequency.setValueAtTime(f, t + i*0.2); });
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.5, t+0.05);
-        g.gain.exponentialRampToValueAtTime(0.0001, t+1.1);
-        o.start(t); o.stop(t+1.2);
-      }
-
-      function notify(title, body){
-        if (!('Notification' in window)) return;
-        if (Notification.permission === 'granted') new Notification(title, { body });
-        else if (Notification.permission !== 'denied') {
-          Notification.requestPermission().then(p => { if (p==='granted') new Notification(title, { body }); });
-        }
-      }
-
-      function saveDuration(ms){
-        localStorage.setItem('flexTimerDuration', JSON.stringify({ totalMs: ms, savedAt: Date.now() }));
-        btnLast.style.display = 'inline-block';
-      }
-
-      function updateMuteButton(){
-        btnMute.textContent = muteBeep ? '🔇 الصوت مكتوم' : '🔔 الصوت يعمل';
-      }
-
-      // events
-      btnStart.addEventListener('click', () => startTick(false));
-      btnPause.addEventListener('click', () => stopTick());
-      btnResume.addEventListener('click', () => {
-        if (remaining > 0) startTick(true);
-      });
-      btnReset.addEventListener('click', () => reset());
-
-      chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-          const mins = parseInt(chip.dataset.minutes, 10);
-          const ms = mins * 60 * 1000;
-          totalMs = ms;
-          remaining = ms;
-          inputsFromMs(ms);
-          render();
-        });
-      });
-
-      btnLast.addEventListener('click', () => {
-        const saved = JSON.parse(localStorage.getItem('flexTimerDuration') || 'null');
-        if (saved && saved.totalMs){
-          totalMs = saved.totalMs;
-          remaining = saved.totalMs;
-          inputsFromMs(saved.totalMs);
-          render();
-        }
-      });
-
-      btnMute.addEventListener('click', () => {
-        muteBeep = !muteBeep;
-        localStorage.setItem('flexTimerMute', muteBeep ? '1' : '0');
-        updateMuteButton();
-      });
-
-      // تحديث الوقت في الدائري أول مرة
-      render();
-
-      // اختصارات
-      addEventListener('keydown', (e) => {
-        if (e.target.closest('input,textarea,select,button')) return;
-        if (e.code === 'Space') {
-          e.preventDefault();
-          if (remaining > 0) paused ? startTick(true) : stopTick();
-        } else if (e.code === 'Enter') {
-          e.preventDefault();
-          if (paused) startTick(false);
-        }
-      });
+    (function loadState(){
+      const st=JSON.parse(localStorage.getItem('timerDashboard')||'{}');
+      profiles=st.profiles||[{name:'جلسة 25 دقيقة',minutes:25},{name:'دوام 8 ساعات',minutes:480},{name:'استراحة 10 د',minutes:10}];
+      history=st.history||[];
+      webhookInput.value=st.webhook||'';
+      const theme=st.theme||'dark';
+      document.documentElement.setAttribute('data-theme',theme);
     })();
+
+    function saveState(){
+      localStorage.setItem('timerDashboard',JSON.stringify({
+        profiles,history,webhook:webhookInput.value,
+        theme:document.documentElement.getAttribute('data-theme')
+      }));
+    }
+
+    function createTimer(defaultMinutes=60){
+      const id='t'+Date.now()+Math.random().toString(16).slice(2,6);
+      const totalMs=defaultMinutes*60*1000;
+      const timer={id,name:'مؤقت',mode:'countdown',totalMs,remaining:totalMs,running:false,lastTick:null,periodicMinutes:0,muted:false,useStartAt:false,startAt:''};
+      timers.push(timer);activeTimerId=id;renderTimers();return timer;
+    }
+
+    function renderTimers(){
+      timersEl.innerHTML='';
+      if(timers.length===1)timersEl.classList.add('single');else timersEl.classList.remove('single');
+
+      timers.forEach(t=>{
+        const card=document.createElement('div');
+        card.className='timer-card';
+        if(t.id===activeTimerId)card.classList.add('active');
+
+        const header=document.createElement('div');
+        header.className='timer-header';
+        const title=document.createElement('input');
+        title.value=t.name;title.style.background='transparent';title.style.border='none';title.style.outline='none';title.style.fontWeight='700';
+        title.addEventListener('input',()=>{t.name=title.value;saveState();});
+        const badge=document.createElement('span');
+        badge.className='badge';
+        badge.textContent=t.running?'يعمل':(t.useStartAt&&t.startAt?`ينتظر ${t.startAt}`:'متوقف');
+        header.appendChild(title);header.appendChild(badge);card.appendChild(header);
+
+        const inputsRow=document.createElement('div');inputsRow.className='inputs-row';
+        const parts=msToParts(t.totalMs);
+        function makeField(lbl,val){
+          const f=document.createElement('div');f.className='field';
+          const lab=document.createElement('label');lab.textContent=lbl;
+          const inp=document.createElement('input');inp.type='number';inp.value=val;
+          f.appendChild(lab);f.appendChild(inp);
+          return{field:f,input:inp};
+        }
+        const {field:fH,input:inH}=makeField('الساعات',parts.h);
+        const {field:fM,input:inM}=makeField('الدقائق',parts.m);
+        const {field:fS,input:inS}=makeField('الثواني',parts.s);
+        inputsRow.appendChild(fH);inputsRow.appendChild(fM);inputsRow.appendChild(fS);
+
+        const fMode=document.createElement('div');fMode.className='field';fMode.innerHTML='<label>الوضع</label>';
+        const sel=document.createElement('select');sel.innerHTML='<option value="countdown">تنازلي</option><option value="countup">تصاعدي</option>';sel.value=t.mode;
+        fMode.appendChild(sel);inputsRow.appendChild(fMode);
+
+        const fP=document.createElement('div');fP.className='field';fP.innerHTML='<label>تنبيه كل (د)</label>';
+        const inP=document.createElement('input');inP.type='number';inP.value=t.periodicMinutes||'';fP.appendChild(inP);
+        inputsRow.appendChild(fP);
+
+        card.appendChild(inputsRow);
+
+        // start row
+        const startRow=document.createElement('div');startRow.className='inline-small';
+        const labelWrap=document.createElement('label');
+        const startChk=document.createElement('input');startChk.type='checkbox';startChk.checked=t.useStartAt;
+        const labelText=document.createElement('span');labelText.textContent='ابدأ عند';
+        labelWrap.appendChild(startChk);labelWrap.appendChild(labelText);
+        const startTime=document.createElement('input');startTime.type='time';startTime.className='time-input';startTime.value=t.startAt||'';
+        const btnCalc=document.createElement('button');btnCalc.textContent='احسب المتبقي لليوم';btnCalc.className='small-btn';
+        startRow.appendChild(labelWrap);startRow.appendChild(startTime);startRow.appendChild(btnCalc);
+        card.appendChild(startRow);
+
+        const ringWrap=document.createElement('div');ringWrap.className='ring-wrap';
+        const ring=document.createElement('div');ring.className='ring';
+        const track=document.createElement('div');track.className='track';
+        const prog=document.createElement('div');prog.className='progress';
+        const time=document.createElement('div');time.className='time';
+
+        function updateLocalView(){
+          if(t.mode==='countdown'){
+            time.textContent=formatMs(t.remaining);
+            const pct=t.totalMs?(1-(t.remaining/t.totalMs))*100:0;
+            prog.style.setProperty('--p',pct);
+          }else{
+            time.textContent=formatMs(t.totalMs - t.remaining);
+            prog.style.setProperty('--p',0);
+          }
+          badge.textContent=t.running?'يعمل':(t.useStartAt&&t.startAt?`ينتظر ${t.startAt}`:'متوقف');
+        }
+        updateLocalView();
+
+        ring.appendChild(track);ring.appendChild(prog);ring.appendChild(time);ringWrap.appendChild(ring);
+        card.appendChild(ringWrap);
+
+        const actions=document.createElement('div');actions.className='timer-actions';
+        const btnStart=document.createElement('button');btnStart.textContent='ابدأ';
+        const btnPause=document.createElement('button');btnPause.textContent='إيقاف';btnPause.className='secondary';
+        const btnResume=document.createElement('button');btnResume.textContent='استئناف';btnResume.className='secondary';
+        const btnReset=document.createElement('button');btnReset.textContent='إعادة';btnReset.className='secondary';
+        const btnMute=document.createElement('button');btnMute.textContent=t.muted?'🔇':'🔔';btnMute.className='secondary';
+        const btnDelete=document.createElement('button');btnDelete.textContent='🗑️ حذف';btnDelete.className='secondary';
+        actions.append(btnStart,btnPause,btnResume,btnReset,btnMute,btnDelete);card.appendChild(actions);
+
+        function applyInputs(){
+          const h=parseInt(normalizeDigits(inH.value)||'0',10);
+          const m=parseInt(normalizeDigits(inM.value)||'0',10);
+          const s=parseInt(normalizeDigits(inS.value)||'0',10);
+          const ms=((h*60*60)+(m*60)+s)*1000;
+          t.totalMs=ms;
+          if(t.mode==='countdown')t.remaining=ms;else t.remaining=0;
+          updateLocalView();saveState();
+        }
+        inH.addEventListener('input',applyInputs);
+        inM.addEventListener('input',applyInputs);
+        inS.addEventListener('input',applyInputs);
+
+        sel.addEventListener('change',()=>{
+          t.mode=sel.value;
+          if(t.mode==='countdown')t.remaining=t.totalMs;else t.remaining=0;
+          updateLocalView();saveState();
+        });
+        inP.addEventListener('change',()=>{
+          t.periodicMinutes=parseInt(normalizeDigits(inP.value)||'0',10)||0;
+          saveState();
+        });
+
+        startChk.addEventListener('change',()=>{
+          t.useStartAt=startChk.checked;
+          if(t.useStartAt && !t.startAt){
+            const now=new Date();now.setMinutes(now.getMinutes()+1);
+            const hh=String(now.getHours()).padStart(2,'0');
+            const mm=String(now.getMinutes()).padStart(2,'0');
+            t.startAt=`${hh}:${mm}`;startTime.value=t.startAt;
+          }
+          updateLocalView();saveState();
+        });
+        startTime.addEventListener('change',()=>{
+          t.startAt=startTime.value;saveState();updateLocalView();
+        });
+
+        // هنا التعديل المهم
+        btnCalc.addEventListener('click',e=>{
+          e.stopPropagation();
+          const val=startTime.value;
+          if(!val){alert('حدد وقت أولاً');return;}
+          const target=makeTodayTargetFromHHMM(val);
+          if(!target){alert('وقت غير صالح');return;}
+          const now=new Date();
+          let diff=target.getTime()-now.getTime();
+          if(diff<0){target.setDate(target.getDate()+1);diff=target.getTime()-now.getTime();}
+          // حدّث المؤقت
+          t.mode='countdown';
+          t.totalMs=diff;
+          t.remaining=diff;
+          t.running=true;
+          t.useStartAt=false;
+          t.lastTick=Date.now();
+
+          // حدّث الحقول عشان زر "ابدأ" ما يرجّع القيمة القديمة
+          const parts=msToParts(diff);
+          inH.value=parts.h;
+          inM.value=parts.m;
+          inS.value=parts.s;
+
+          updateLocalView();
+          saveState();
+        });
+
+        btnStart.addEventListener('click',e=>{
+          e.stopPropagation();
+          // نستخدم القيم الموجودة في الحقول (الآن محدثة لو كان فيه "احسب المتبقي")
+          applyInputs();
+          t.useStartAt=false;
+          t.running=true;
+          t.lastTick=Date.now();
+          activeTimerId=t.id;
+          updateLocalView();
+          saveState();
+        });
+        btnPause.addEventListener('click',e=>{
+          e.stopPropagation();t.running=false;updateLocalView();saveState();
+        });
+        btnResume.addEventListener('click',e=>{
+          e.stopPropagation();
+          if(t.remaining>0 || t.mode==='countup'){
+            t.running=true;t.lastTick=Date.now();activeTimerId=t.id;updateLocalView();saveState();
+          }
+        });
+        btnReset.addEventListener('click',e=>{
+          e.stopPropagation();
+          if(t.mode==='countdown')t.remaining=t.totalMs;else t.remaining=0;
+          t.running=false;updateLocalView();saveState();
+        });
+        btnMute.addEventListener('click',e=>{
+          e.stopPropagation();t.muted=!t.muted;btnMute.textContent=t.muted?'🔇':'🔔';saveState();
+        });
+        btnDelete.addEventListener('click',e=>{
+          e.stopPropagation();
+          if(confirm('تحذف هذا المؤقت؟')){
+            timers=timers.filter(x=>x.id!==t.id);
+            if(activeTimerId===t.id)activeTimerId=timers[0]?.id||null;
+            renderTimers();saveState();
+          }
+        });
+
+        card.addEventListener('click',e=>{
+          if(!e.target.closest('button,input,select')){activeTimerId=t.id;renderTimers();}
+        });
+
+        timersEl.appendChild(card);
+        // ربط الكارت بالتايمر
+        card.dataset.id=t.id;
+      });
+    }
+
+    function renderProfiles(){
+      profilesEl.innerHTML='';
+      profiles.forEach((p,idx)=>{
+        const div=document.createElement('div');div.className='profile-item';
+        div.innerHTML=`<span>${p.name}</span><small>${p.minutes} د</small>`;
+        div.addEventListener('click',()=>{
+          if(!activeTimerId)return;
+          const t=timers.find(x=>x.id===activeTimerId);if(!t)return;
+          t.totalMs=p.minutes*60*1000;t.mode='countdown';t.remaining=t.totalMs;renderTimers();
+        });
+        const del=document.createElement('span');del.textContent='✕';del.style.cursor='pointer';
+        del.onclick=e=>{e.stopPropagation();profiles.splice(idx,1);renderProfiles();saveState();};
+        div.appendChild(del);profilesEl.appendChild(div);
+      });
+    }
+
+    function renderHistory(){
+      historyEl.innerHTML='';
+      history.slice().reverse().forEach(h=>{
+        const div=document.createElement('div');div.className='history-item';
+        div.innerHTML=`<span>${h.name}</span><small>${h.when}</small>`;
+        historyEl.appendChild(div);
+      });
+    }
+
+    setInterval(()=>{
+      const now=Date.now();
+      timers.forEach(t=>{
+        if(!t.running && t.useStartAt && t.startAt){
+          const target=makeTodayTargetFromHHMM(t.startAt);
+          if(target && now>=target.getTime()){
+            t.running=true;t.lastTick=now;
+          }
+        }
+        if(!t.running)return;
+        const elapsed=now-(t.lastTick||now);
+        t.lastTick=now;
+        if(t.mode==='countdown'){
+          t.remaining-=elapsed;
+          if(t.remaining<=0){
+            t.remaining=0;t.running=false;onTimerFinished(t);
+          }
+        }else{
+          t.remaining+=elapsed;
+          if(t.totalMs && t.remaining>=t.totalMs){
+            t.running=false;onTimerFinished(t);
+          }
+        }
+      });
+
+      timersEl.querySelectorAll('.timer-card').forEach(card=>{
+        const id=card.dataset.id;
+        const t=timers.find(x=>x.id===id);
+        if(!t)return;
+        const timeEl=card.querySelector('.time');
+        const progEl=card.querySelector('.progress');
+        const badgeEl=card.querySelector('.badge');
+        if(t.mode==='countdown'){
+          timeEl.textContent=formatMs(t.remaining);
+          const pct=t.totalMs?(1-(t.remaining/t.totalMs))*100:0;
+          progEl.style.setProperty('--p',pct);
+        }else{
+          timeEl.textContent=formatMs(t.totalMs - t.remaining);
+          progEl.style.setProperty('--p',0);
+        }
+        badgeEl.textContent=t.running?'يعمل':(t.useStartAt && t.startAt?`ينتظر ${t.startAt}`:'متوقف');
+      });
+    },900);
+
+    function onTimerFinished(t){
+      history.push({name:t.name||'مؤقت',when:new Date().toLocaleString('ar-SA')});
+      saveState();renderHistory();
+
+      if(!t.muted){
+        try{
+          const ctx=new (window.AudioContext||window.webkitAudioContext)();
+          const o=ctx.createOscillator();const g=ctx.createGain();
+          o.connect(g);g.connect(ctx.destination);o.type='sine';
+          let st=ctx.currentTime;
+          o.frequency.setValueAtTime(880,st);
+          g.gain.setValueAtTime(0.001,st);
+          g.gain.exponentialRampToValueAtTime(0.4,st+0.05);
+          g.gain.exponentialRampToValueAtTime(0.001,st+1);
+          o.start(st);o.stop(st+1.1);
+        }catch(e){}
+      }
+      if('Notification' in window){
+        if(Notification.permission==='granted'){
+          new Notification('انتهى المؤقت',{body:t.name||'مؤقت'});
+        }else if(Notification.permission!=='denied'){
+          Notification.requestPermission();
+        }
+      }
+      const url=webhookInput.value.trim();
+      if(url){
+        fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({timer:t.name,finishedAt:new Date().toISOString()})}).catch(()=>{});
+      }
+    }
+
+    setInterval(()=>{
+      const now=Date.now();
+      timers.forEach(t=>{
+        if(!t.running || !t.periodicMinutes)return;
+        const key='lastPeriodic_'+t.id;
+        const last=t[key]||0;
+        if(now-last >= t.periodicMinutes*60*1000){
+          t[key]=now;
+          if('Notification' in window && Notification.permission==='granted'){
+            new Notification('تنبيه دوري',{body:t.name||'مؤقت'});
+          }
+        }
+      });
+    },10000);
+
+    document.getElementById('add-timer').addEventListener('click',()=>{createTimer(60);saveState();});
+    document.getElementById('save-profile').addEventListener('click',()=>{
+      const name=document.getElementById('profile-name').value.trim();
+      const mins=parseInt(normalizeDigits(document.getElementById('profile-mins').value)||'0',10);
+      if(!name||!mins)return;
+      profiles.push({name,minutes:mins});
+      document.getElementById('profile-name').value='';
+      document.getElementById('profile-mins').value='';
+      renderProfiles();saveState();
+    });
+    document.getElementById('clear-history').addEventListener('click',()=>{history=[];renderHistory();saveState();});
+    document.getElementById('toggle-theme').addEventListener('click',()=>{
+      const cur=document.documentElement.getAttribute('data-theme')||'dark';
+      const next=cur==='dark'?'light':'dark';
+      document.documentElement.setAttribute('data-theme',next);saveState();
+    });
+    webhookInput.addEventListener('change',saveState);
+
+    // init
+    if(timers.length===0){createTimer(480);}else{renderTimers();}
+    renderProfiles();renderHistory();
   </script>
 </body>
 </html>
